@@ -31,22 +31,102 @@ app.post("/webhook",async (req,res)=>{
   var options = {
     url: "https://api.dialogflow.com/v1/query?v=20150910",
     method: "POST",
-    headers: { 'Authorization': 'Bearer ' + '2a7a1ea959934ecb94773d5a63969912', 'Content-Type': 'application/json'},
+    headers: { 'Authorization': 'Bearer ' + '60da65e2782f4c1ab12a48a2f56cdc3d', 'Content-Type': 'application/json'},
     body: req.body,
     json: true
   };
   await requestAPI(options, function (error, response, body) {
   console.log('1------------',body);
-    if (body.result.action=='input.GlassSize')
-    {
-    //  CreateClaim(req,res);
-      if(res){
-       // priceConverter(req,res)
-      }
-      } else {
+  if (intentFrom === 'input.welcome' ) {
+    msg = {
+      "speech": "",
+      "displayText": "",
+      "messages": [{
+        "type": 0,
+        "platform": "facebook",
+        "speech": "Hello. I'm Macy! How can help you today? Enter your question below and I'll help you find the information you need"
+      }]
       
-             res.send(body);
+    };
+    return res.json(msg);
+  } else if(intentFrom === 'input.glassClaim') {
+    msg = {
+      "messages":[{
+        "type":0,
+        "platform":"facebook",
+        "speech":"Sorry about that. We'll help you get this claim sorted out in no time."
+      },
+      {
+        "type":4,
+        "platform":"facebook",
+        "payload":{
+          "facebook":{
+            "text":"Is it related to your Auto, Home or Businessowners policy?",
+            "quick_replies_img":[{
+              "content_type":"text",
+              "title":"Auto",
+              "payload":"Auto"
+            },{
+              "content_type":"text",
+              "title":"Home",
+              "payload":"Home"
+            },{
+              "content_type":"text",
+              "title":"Business",
+              "payload":"BusinessOwners"
+            }]
+          }
+        }
       }
+    ]};
+    return res.json(msg);
+    //,
+    //"image_url":"avatar/image/Auto.svg"
+  } else if(intentFrom === 'input.policy') {
+    msg = {
+      "speech": "",
+      "displayText": "",
+      "messages": [{
+        "type": 0,
+        "platform": "facebook",
+        "speech": "Thanks for the details! Please hold on, while we check your coverage details <br><br>Happy to inform that your broken window is covered under your Homeowners policy <br><br> We'll need some more information to help you with the claim processing <br><br>When did the accident occur ? example It happened on 31st Aug / Yesterday / Today / Day"
+      }]
+      
+    };
+    return res.json(msg);
+  }
+
+  else if(intentFrom === 'input.upload_image') {
+    var claimdata=CreateClaim()
+    if(claimdata)    {
+    msg = {
+      "speech": "",
+      "displayText": "",
+      "messages": [{
+        "type": 0,
+        "platform": "facebook",
+        "speech": "Your Cliam no is "+claimdata
+      }]
+      
+    };
+    return res.json(msg);
+  }
+  if(claimdata){
+var priceve=priceConverter();
+msg = {
+  "speech": "",
+  "displayText": "",
+  "messages": [{
+    "type": 0,
+    "platform": "facebook",
+    "speech": "Your Cliam price "+ priceve
+  }]
+  
+};
+  }
+  }
+ 
+ 
   
   });
 })
@@ -66,7 +146,7 @@ var lossType;
 var lossCause;
 var description
 
-function CreateClaim(req,res)
+function CreateClaim()
 {
   //console.log('inside create claim------------',req);
   var options = { method: 'POST',
@@ -104,35 +184,22 @@ function CreateClaim(req,res)
   json: true };
 
  
-
+  var claimno
 request(options, function (error, response, body) {
   console.log('2------------',body);
   if (error) throw new Error(error);
 console.log("Rakesh jha");
-  var claimno = body.result;
+claimno= body.result;
   console.log(claimno);
   
   console.log('3------------',claimno);
-          return res.json({"result":{"fulfillment": {
-            "speech": "",
-            "messages": [
-              {
-                "type": 0,
-                "platform": "facebook",
-                "speech": "Your Claim number is "+claimno
-              },
-              {
-                "type": 0,
-                "speech": ""
-              }
-            ]
-          }}});
+   return claimno;
       
 });
 
 }
 
-function priceConverter(req,res){
+function priceConverter(){
   var options = { method: 'POST',
   url: 'http://35.154.116.87:7999/aa/getMockGlassCost',
   headers: 
@@ -154,22 +221,8 @@ request(options, function (error, response, body) {
   console.log(body.result);
   
   console.log('price 3------------',price);
-          return res.json({"result":{"fulfillment": {
-            "speech": "",
-            "messages": [
-              {
-                "type": 0,
-                "platform": "facebook",
-                "speech": "Based on the quotes received from the market, you are entitled to a claims payment of USD "+ price +"."+
-                           "We've added an additional 10% to the market rates to cover any additional expenses that you may incur "
-              },
-              {
-                "type": 0,
-                "speech": ""
-              }
-            ]
-          }}});
 
+  return price;
   
 });
 
